@@ -12,8 +12,8 @@ from utils import save_to_txt, save_to_json
 
 # Load API keys from .env
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
-SECURITYTRAILS_API_KEY = os.getenv("SECURITYTRAILS_API_KEY")
-DNSDUMPSTER_API_KEY = os.getenv("DNSDUMPSTER_API_KEY")
+SECURITYTRAILS_API_KEY = os.getenv("SECURITYTRAILS")
+DNSDUMPSTER_API_KEY = os.getenv("DNSDUMPSTER")
 
 def is_resolvable(domain):
     """Check if the subdomain resolves to an IP address."""
@@ -24,7 +24,7 @@ def is_resolvable(domain):
         return False
 
 def main():
-    parser = argparse.ArgumentParser(description="Subdomain Enumerator (crt.sh + SecurityTrails + AlienVault + Anubis + DNSDumpster + Wayback)")
+    parser = argparse.ArgumentParser(description="Subdomain Enumerator")
     parser.add_argument("domain", help="Target domain")
     parser.add_argument("-s", "--save", action="store_true", help="Save results to subdomains.txt")
     parser.add_argument("-c", "--check", action="store_true", help="Only show subdomains that resolve (DNS check)")
