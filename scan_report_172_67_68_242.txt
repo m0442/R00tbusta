@@ -1,0 +1,7 @@
+Scan Report for 172.67.68.242
+OS Detection: Linux/Unix (approx)
+
+UDP 53/udp | Unknown | Banner: Filtered/No response
+UDP 161/udp | Unknown | Banner: Filtered/No response
+TCP 80/tcp | http | Banner: No banner
+TCP 443/tcp | https | Banner: No banner
