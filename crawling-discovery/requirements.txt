@@ -1,8 +1,0 @@
-# Python dependencies for the crawling automation script
-# Note: This script primarily uses built-in Python libraries
-# The main external tools (waymore, waybackurls, gau, katana) 
-# need to be installed separately via their respective installation methods
-
-# No external Python packages required - uses only built-in libraries:
-# - os, sys, subprocess, threading, time, argparse
-# - pathlib, datetime, typing, shutil 
