@@ -1,6 +1,6 @@
 #Editor files
 .idea*
-output/*
+subdomain/output/subdomains.txt
 /shelf/
 /workspace.xml
 /httpRequests/
