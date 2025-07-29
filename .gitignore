@@ -1,5 +1,5 @@
 #Editor files
-.idea*
+*/.idea/*
 subdomain/output/subdomains.txt
 /shelf/
 /workspace.xml
@@ -214,3 +214,4 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+/.idea

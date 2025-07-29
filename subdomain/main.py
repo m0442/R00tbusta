@@ -5,11 +5,15 @@ from dotenv import load_dotenv
 from modules.crtsh import get_subdomains as crtsh_get_subdomains
 from modules.securitytrails import get_subdomains as st_get_subdomains
 from modules.alienvault import get_subdomains as av_get_subdomains
+from modules.anubis import get_subdomains as anubis_get_subdomains
+from modules.dnsdumpster import get_subdomains as dnsdumpster_get_subdomains
+from modules.wayback import get_subdomains as wayback_get_subdomains
 from utils import save_to_txt, save_to_json
 
 # Load API keys from .env
-load_dotenv()
+load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
 SECURITYTRAILS_API_KEY = os.getenv("SECURITYTRAILS_API_KEY")
+DNSDUMPSTER_API_KEY = os.getenv("DNSDUMPSTER_API_KEY")
 
 def is_resolvable(domain):
     """Check if the subdomain resolves to an IP address."""
@@ -20,7 +24,7 @@ def is_resolvable(domain):
         return False
 
 def main():
-    parser = argparse.ArgumentParser(description="Subdomain Enumerator (crt.sh + SecurityTrails + AlienVault)")
+    parser = argparse.ArgumentParser(description="Subdomain Enumerator (crt.sh + SecurityTrails + AlienVault + Anubis + DNSDumpster + Wayback)")
     parser.add_argument("domain", help="Target domain")
     parser.add_argument("-s", "--save", action="store_true", help="Save results to subdomains.txt")
     parser.add_argument("-c", "--check", action="store_true", help="Only show subdomains that resolve (DNS check)")
@@ -29,70 +33,46 @@ def main():
 
     print(f"[*] Enumerating subdomains for: {args.domain}")
 
-    # -------- Source 1: crt.sh --------
-    print("[*] Using source: crt.sh")
-    subs_crtsh = []
-    try:
-        subs_crtsh = crtsh_get_subdomains(args.domain)
-    except Exception as e:
-        print(f"[!] Error in source crt.sh: {e}")
-    print(f"[✓] crt.sh found {len(subs_crtsh)} subdomains.")
+    all_sources = [
+        ("crt.sh", crtsh_get_subdomains),
+        ("SecurityTrails", lambda d: st_get_subdomains(d, SECURITYTRAILS_API_KEY) if SECURITYTRAILS_API_KEY else []),
+        ("AlienVault", av_get_subdomains),
+        ("Anubis", anubis_get_subdomains),
+        ("DNSDumpster", dnsdumpster_get_subdomains),
+        ("Wayback", wayback_get_subdomains),
+    ]
 
-    # -------- Source 2: SecurityTrails --------
-    print("[*] Using source: SecurityTrails")
-    subs_st = []
-    if SECURITYTRAILS_API_KEY:
-        try:
-            subs_st = st_get_subdomains(args.domain, SECURITYTRAILS_API_KEY)
-        except Exception as e:
-            print(f"[!] Error in source SecurityTrails: {e}")
-        print(f"[✓] SecurityTrails found {len(subs_st)} subdomains.")
-    else:
-        print("[!] SECURITYTRAILS_API_KEY not found. Skipping SecurityTrails.")
-
-    # -------- Source 3: AlienVault OTX --------
-    print("[*] Using source: AlienVault OTX")
-    subs_av = []
-    try:
-        subs_av = av_get_subdomains(args.domain)
-    except Exception as e:
-        print(f"[!] Error in source AlienVault OTX: {e}")
-    print(f"[✓] AlienVault OTX found {len(subs_av)} subdomains.")
-
-    # -------- First-seen attribution per source --------
     seen = set()
-    unique_crtsh = []
-    unique_st = []
-    unique_av = []
+    unique_results = []
+    source_stats = {}
 
-    for sub in subs_crtsh:
-        if sub not in seen:
-            unique_crtsh.append(sub)
-            seen.add(sub)
+    for name, func in all_sources:
+        print(f"[*] Using source: {name}")
+        try:
+            subs = func(args.domain)
+        except Exception as e:
+            print(f"[!] Error in source {name}: {e}")
+            subs = []
 
-    for sub in subs_st:
-        if sub not in seen:
-            unique_st.append(sub)
-            seen.add(sub)
+        print(f"[✓] {name} found {len(subs)} subdomains.")
 
-    for sub in subs_av:
-        if sub not in seen:
-            unique_av.append(sub)
-            seen.add(sub)
+        unique_this_source = []
+        for sub in subs:
+            if sub not in seen:
+                unique_this_source.append(sub)
+                seen.add(sub)
+        unique_results.extend(unique_this_source)
+        source_stats[name] = len(unique_this_source)
 
-    union_subdomains = unique_crtsh + unique_st + unique_av
+    print(f"[✓] Total combined unique subdomains: {len(unique_results)}")
+    for source, count in source_stats.items():
+        print(f"[✓] Unique to {source} (first seen): {count}")
 
-    print(f"[✓] Total combined unique subdomains: {len(union_subdomains)}")
-    print(f"[✓] Unique to crt.sh (first seen): {len(unique_crtsh)}")
-    print(f"[✓] Unique to SecurityTrails (first seen): {len(unique_st)}")
-    print(f"[✓] Unique to AlienVault (first seen): {len(unique_av)}")
-
-    # -------- DNS resolution (IP address collection) --------
+    # DNS resolution
     results = []
-    for sub in union_subdomains:
-        if args.check:
-            if not is_resolvable(sub):
-                continue
+    for sub in unique_results:
+        if args.check and not is_resolvable(sub):
+            continue
         ip = None
         try:
             ip = socket.gethostbyname(sub)
@@ -100,7 +80,6 @@ def main():
             pass
         results.append({"domain": sub, "ip": ip})
 
-    # -------- Output handling --------
     if results:
         if args.output == "json":
             save_to_json(results, args.domain)
