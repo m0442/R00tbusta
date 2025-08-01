@@ -27,6 +27,14 @@ jobs:
       - name: Make shell script executable
         run: chmod +x entry.sh
 
+      - name: Check if DISCORD_WEBHOOK secret is available
+        run: |
+          if [ -z "${{ secrets.DISCORD_WEBHOOK }}" ]; then
+            echo "❌ Webhook secret is NOT accessible in this run!"
+          else
+            echo "✅ Webhook secret is present."
+          fi
+
       - name: Run script
         run: ./entry.sh "$DOMAIN"
 
