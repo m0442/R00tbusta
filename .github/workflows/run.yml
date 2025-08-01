@@ -1,4 +1,4 @@
-name: Run Python Script with Domain
+name: Run the script
 
 on:
   workflow_dispatch:
