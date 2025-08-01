@@ -44,17 +44,33 @@ jobs:
           mkdir -p artifacts
           zip -r "artifacts/${DOMAIN}.zip" output/
 
-      - name: Send ZIP to Discord
+      - name: Upload ZIP to Discord (hardcoded webhook)
         run: |
           DOMAIN=${{ github.event.inputs.domain }}
           FILE="artifacts/${DOMAIN}.zip"
+          WEBHOOK_URL="https://discord.com/api/webhooks/1400939131093123113/39JBCU57iA9JycYBkgbb-DNPhbKp8iQpzhz6J94lTgSMAmAmtpb7Jz6QFK3KKRy6N7K8"
+          
           if [ -f "$FILE" ]; then
+            echo "📤 Sending ZIP to Discord..."
             curl -F "file=@$FILE" \
                  -F "payload_json={\"content\": \"📦 Output ZIP for $DOMAIN\"}" \
-                 ${{ secrets.DISCORD_WEBHOOK }}
+                 "$WEBHOOK_URL"
           else
-            curl -H "Content-Type: application/json" \
-                 -X POST \
-                 -d "{\"content\": \"❌ ZIP file not found for $DOMAIN\"}" \
-                 ${{ secrets.DISCORD_WEBHOOK }}
+            echo "❌ ZIP file not found: $FILE"
           fi
+
+
+#      - name: Send ZIP to Discord
+#        run: |
+#          DOMAIN=${{ github.event.inputs.domain }}
+#          FILE="artifacts/${DOMAIN}.zip"
+#          if [ -f "$FILE" ]; then
+#            curl -F "file=@$FILE" \
+#                 -F "payload_json={\"content\": \"📦 Output ZIP for $DOMAIN\"}" \
+#                 ${{ secrets.DISCORD_WEBHOOK }}
+#          else
+#            curl -H "Content-Type: application/json" \
+#                 -X POST \
+#                 -d "{\"content\": \"❌ ZIP file not found for $DOMAIN\"}" \
+#                 ${{ secrets.DISCORD_WEBHOOK }}
+#          fi
