@@ -29,3 +29,24 @@ jobs:
 
       - name: Run script
         run: ./entry.sh "$DOMAIN"
+
+      - name: Zip output folder
+        run: |
+          DOMAIN=${{ github.event.inputs.domain }}
+          mkdir -p artifacts
+          zip -r "artifacts/${DOMAIN}.zip" output/
+
+      - name: Send ZIP to Discord
+        run: |
+          DOMAIN=${{ github.event.inputs.domain }}
+          FILE="artifacts/${DOMAIN}.zip"
+          if [ -f "$FILE" ]; then
+            curl -F "file=@$FILE" \
+                 -F "payload_json={\"content\": \"📦 Output ZIP for $DOMAIN\"}" \
+                 ${{ secrets.DISCORD_WEBHOOK }}
+          else
+            curl -H "Content-Type: application/json" \
+                 -X POST \
+                 -d "{\"content\": \"❌ ZIP file not found for $DOMAIN\"}" \
+                 ${{ secrets.DISCORD_WEBHOOK }}
+          fi
