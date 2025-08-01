@@ -24,11 +24,8 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: List files
-        run: ls -R
-
       - name: Make shell script executable
-        run: chmod +x scripts/run.sh
+        run: chmod +x entry.sh
 
       - name: Run script
-        run: ./scripts/run.sh "$DOMAIN"
+        run: ./entry.sh "$DOMAIN"
