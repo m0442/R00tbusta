@@ -22,10 +22,10 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"  # غيرها حسب نسختك
+          python-version: "3.12"
 
       - name: Make shell script executable
-        run: chmod +x deploy.sh
+        run: chmod +x run.sh
 
       - name: Run script
-        run: ./deploy.sh "$DOMAIN"
+        run: ./run.sh "$DOMAIN"
