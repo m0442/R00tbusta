@@ -1,0 +1,31 @@
+name: Run Python Script with Domain
+
+on:
+  workflow_dispatch:
+    inputs:
+      domain:
+        description: "Enter the domain name"
+        required: true
+        default: "davidmaximous.me"
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+
+    env:
+      DOMAIN: ${{ github.event.inputs.domain }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"  # غيرها حسب نسختك
+
+      - name: Make shell script executable
+        run: chmod +x deploy.sh
+
+      - name: Run script
+        run: ./deploy.sh "$DOMAIN"
